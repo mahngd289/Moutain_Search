@@ -2,8 +2,15 @@ import tkinter as tk
 from tkinter import filedialog
 from PIL import Image, ImageTk
 import numpy as np
-import matplotlib.pyplot as plt
 import cv2
+import sys
+import os
+
+# Thêm đường dẫn gốc vào sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import hàm tìm kiếm từ backend
+from back_end.calculate_similarity import search_similar_images
 
 
 class ImageSearchApp:

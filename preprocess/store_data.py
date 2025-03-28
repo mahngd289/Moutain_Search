@@ -2,17 +2,27 @@ import psycopg2
 import os
 import json
 import numpy as np
+import cv2
 from PIL import Image
 import io
 
-# Kết nối đến PostgreSQL
-conn = psycopg2.connect(
-    dbname="mountains_db",
-    user="your_username",
-    password="your_password",
-    host="localhost"
-)
-cur = conn.cursor()
+
+from preprocess.deep_learning_extraction import extract_features_vgg16
+from preprocess.features_extraction import extract_color_histogram
+
+
+try:
+    # Kết nối đến PostgreSQL
+    conn = psycopg2.connect(
+        dbname="moutains_db",
+        user="admin_user",
+        password="123456",
+        host="localhost"
+    )
+    cur = conn.cursor()
+    print("Kết nối thành công!")
+except Exception as e:
+    print(f"Lỗi kết nối: {e}")
 
 
 # Hàm lưu ảnh vào database

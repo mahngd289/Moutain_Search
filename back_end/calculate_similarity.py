@@ -1,4 +1,9 @@
 import numpy as np
+import json
+import cv2
+from helper.db_connection import get_db_connection
+from preprocess.deep_learning_extraction import extract_features_vgg16
+from preprocess.features_extraction import extract_color_histogram
 
 
 def cosine_similarity(vec1, vec2):
@@ -21,16 +26,11 @@ def euclidean_distance(vec1, vec2):
 def get_similar_images(query_features, feature_type="vgg16", metric="cosine", top_k=3):
     """
     Tìm ảnh tương tự dựa trên đặc trưng và độ đo
-
-    Args:
-        query_features: Vector đặc trưng của ảnh truy vấn
-        feature_type: Loại đặc trưng cần so sánh
-        metric: Phương pháp đo độ tương đồng ('cosine' hoặc 'euclidean')
-        top_k: Số lượng kết quả trả về
-
-    Returns:
-        List các ID và độ tương đồng của các ảnh giống nhất
     """
+    # Lấy kết nối
+    conn = get_db_connection()
+    cur = conn.cursor()
+
     # Lấy tất cả đặc trưng từ database
     cur.execute(
         "SELECT image_id, feature_value FROM image_features WHERE feature_type = %s",
@@ -41,7 +41,15 @@ def get_similar_images(query_features, feature_type="vgg16", metric="cosine", to
     similarities = []
 
     for image_id, feature_json in results:
-        db_features = np.array(json.loads(feature_json))
+        # db_features = np.array(json.loads(feature_json))
+
+        # Kiểm tra kiểu dữ liệu của feature_json
+        if isinstance(feature_json, str):
+            # Nếu là chuỗi JSON, chuyển thành đối tượng Python
+            db_features = np.array(json.loads(feature_json))
+        else:
+            # Nếu đã là list Python, chuyển trực tiếp thành mảng NumPy
+            db_features = np.array(feature_json)
 
         if metric == "cosine":
             similarity = cosine_similarity(query_features, db_features)
@@ -63,15 +71,11 @@ def get_similar_images(query_features, feature_type="vgg16", metric="cosine", to
 def search_similar_images(query_image_path, feature_type="vgg16", top_k=3):
     """
     Hàm tìm kiếm ảnh tương tự từ một ảnh đầu vào
-
-    Args:
-        query_image_path: Đường dẫn đến ảnh truy vấn
-        feature_type: Loại đặc trưng sử dụng
-        top_k: Số lượng ảnh tương tự trả về
-
-    Returns:
-        List các đường dẫn đến ảnh tương tự nhất
     """
+    # Lấy kết nối
+    conn = get_db_connection()
+    cur = conn.cursor()
+
     # Trích xuất đặc trưng từ ảnh truy vấn
     if feature_type == "vgg16":
         query_features = extract_features_vgg16(query_image_path)

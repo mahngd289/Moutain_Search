@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from sklearn.preprocessing import normalize
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 
 def extract_color_histogram(image, bins=32):
