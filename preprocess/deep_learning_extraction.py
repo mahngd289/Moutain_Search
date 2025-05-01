@@ -14,7 +14,7 @@ def extract_features_vgg16(img_path):
 
     # Tải model khi cần thiết
     if base_model is None:
-        print("Đang tải mô hình VGG16...")
+        print("Model VGG16 is loading...")
         base_model = VGG16(weights='imagenet', include_top=False, pooling='avg')
 
     img = image.load_img(img_path, target_size=(224, 224))
@@ -25,5 +25,8 @@ def extract_features_vgg16(img_path):
     # Trích xuất features từ mô hình
     features = base_model.predict(img_array, verbose=0)
     features_flatten = features.flatten()
+
+    # Chuẩn hóa đặc trưng
+    # normalized_features = features[0] / np.linalg.norm(features[0])
 
     return features_flatten

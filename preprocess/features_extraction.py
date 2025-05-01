@@ -1,10 +1,10 @@
 import cv2
 import numpy as np
 from sklearn.preprocessing import normalize
-# import matplotlib.pyplot as plt
+from skimage.feature import graycomatrix, graycoprops
 
 
-def extract_color_histogram(image, bins=32):
+def extract_color_histogram(image, bins=16):
     """Trích xuất histogram màu từ ảnh"""
     # Chuyển sang không gian màu HSV (phù hợp hơn cho phân tích ảnh phong cảnh)
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
@@ -16,22 +16,23 @@ def extract_color_histogram(image, bins=32):
 
 
 def extract_texture_features(image, distances=[1], angles=[0, np.pi / 4, np.pi / 2, 3 * np.pi / 4]):
-    """Trích xuất đặc trưng kết cấu sử dụng GLCM"""
+    """Trích xuất đặc trưng kết cấu sử dụng GLCM từ scikit-image"""
+    # Chuyển sang ảnh xám và giảm số mức xám để tính toán nhanh hơn
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # Tính toán GLCM
-    glcm = np.zeros((256, 256))
-    for distance in distances:
-        for angle in angles:
-            glcm_temp = cv2.createGLCM(gray, distance, angle)
-            glcm += glcm_temp
+    gray = (gray / 16).astype(np.uint8)  # Giảm xuống 16 mức xám
 
-    # Tính đặc trưng Haralick
-    contrast = np.sum(np.abs(np.arange(256)[:, np.newaxis] - np.arange(256)[np.newaxis, :]) ** 2 * glcm)
-    dissimilarity = np.sum(np.abs(np.arange(256)[:, np.newaxis] - np.arange(256)[np.newaxis, :]) * glcm)
-    homogeneity = np.sum(glcm / (1 + np.abs(np.arange(256)[:, np.newaxis] - np.arange(256)[np.newaxis, :])))
-    energy = np.sum(glcm ** 2)
-    correlation = np.sum((np.arange(256)[:, np.newaxis] - np.mean(np.arange(256))) *
-                         (np.arange(256)[np.newaxis, :] - np.mean(np.arange(256))) * glcm)
+    # Chuyển góc từ radian sang độ cho scikit-image
+    angles_deg = [a * 180 / np.pi for a in angles]
+
+    # Tính toán GLCM
+    glcm = graycomatrix(gray, distances, angles_deg, levels=16, symmetric=True, normed=True)
+
+    # Tính các thuộc tính từ GLCM
+    contrast = np.mean(graycoprops(glcm, 'contrast'))
+    dissimilarity = np.mean(graycoprops(glcm, 'dissimilarity'))
+    homogeneity = np.mean(graycoprops(glcm, 'homogeneity'))
+    energy = np.mean(graycoprops(glcm, 'energy'))
+    correlation = np.mean(graycoprops(glcm, 'correlation'))
 
     return np.array([contrast, dissimilarity, homogeneity, energy, correlation])
 
@@ -49,13 +50,28 @@ def extract_edge_features(image, ksize=3):
     # Histogram của góc cạnh
     bins = 36  # Chia 360 độ thành 36 bins
     hist = np.zeros(bins)
+    edge_count = 0
+    
     for i in range(edges.shape[0]):
         for j in range(edges.shape[1]):
             if edges[i, j] > 0:
+                edge_count += 1
                 bin_idx = int(ang[i, j] * 180 / np.pi * bins / 360)
                 hist[bin_idx % bins] += 1
-
-    return normalize(hist.reshape(1, -1))[0]
+    
+    # Handle case when no edges are detected
+    if edge_count == 0:
+        # Return uniform distribution instead of zeros
+        return np.ones(bins) / bins
+    
+    # Manual normalization to avoid division by zero issues
+    sum_hist = np.sum(hist)
+    if sum_hist > 0:
+        hist = hist / sum_hist
+    else:
+        hist = np.ones(bins) / bins
+        
+    return hist
 
 
 def extract_all_features(image_path):

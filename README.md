@@ -49,5 +49,14 @@ conda install pillow=9.0.1
 
 conda install -c conda-forge psycopg2=2.9.3
 
+conda install -c conda-forge scikit-image=0.19.1
+
 pip install protobuf==3.19.6
+
+conda install scikit-image==0.24.0
+```
+
+# App Implementation
+```bash
+store_data -> main.py -> app.py
 ```

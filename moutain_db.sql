@@ -1,16 +1,19 @@
 CREATE TABLE mountain_images (
     id SERIAL PRIMARY KEY,
     file_name VARCHAR(255) NOT NULL,
-    image_data BYTEA NOT NULL,  -- Lưu ảnh dưới dạng nhị phân
-    image_path VARCHAR(255),    -- Hoặc lưu đường dẫn đến file
+    image_path VARCHAR(255) NOT NULL,
     upload_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Bảng lưu trữ các đặc trưng của ảnh
-CREATE TABLE image_features (
-    id SERIAL PRIMARY KEY,
-    image_id INTEGER REFERENCES mountain_images(id),
-    feature_type VARCHAR(50) NOT NULL,  -- Loại đặc trưng (color, texture, shape...)
-    feature_value JSONB,                -- Lưu giá trị đặc trưng dạng JSON
-    feature_vector vector(512)          -- Với extension pgvector (vector 512 chiều)
+-- Tạo extension pgvector nếu chưa có
+CREATE EXTENSION IF NOT EXISTS vector;
+
+-- Bảng đặc trưng hợp nhất - chỉ lưu vector
+CREATE TABLE image_features_unified (
+    image_id INTEGER PRIMARY KEY REFERENCES mountain_images(id),
+    color_vector vector(4096),  -- 16^3 bins từ histogram màu
+    texture_vector vector(5),   -- 5 đặc trưng Haralick
+    edge_vector vector(36),     -- 36 bins góc cạnh
+    vgg16_vector vector(512),   -- 512 chiều từ VGG16
+    enhanced_color_vector vector(361)
 );
