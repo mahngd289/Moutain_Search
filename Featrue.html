@@ -1,0 +1,1600 @@
+<html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="generator" content="Jekyll v3.10.0"/>
+        <meta property="og:title" content="Trích đặc trưng HOG - Histograms of Oriented Gradients"/>
+        <meta name="author" content="Minh Nguyen"/>
+        <meta property="og:locale" content="vi"/>
+        <meta name="description" content="Bài báo gốc HOG đề xuất phương pháp rút trích đặc trưng sử dụng các thống kê histogram về hướng trên ảnh gradient cho bài toán phát hiện người (human detection)."/>
+        <meta property="og:description" content="Bài báo gốc HOG đề xuất phương pháp rút trích đặc trưng sử dụng các thống kê histogram về hướng trên ảnh gradient cho bài toán phát hiện người (human detection)."/>
+        <link rel="canonical" href="https://minhng.info/tutorials/histograms-of-oriented-gradients.html"/>
+        <meta property="og:url" content="https://minhng.info/tutorials/histograms-of-oriented-gradients.html"/>
+        <meta property="og:site_name" content="Minh Nguyen"/>
+        <meta property="og:image" content="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images/opencv/opencv-17-hog.jpg?alt=media&token=26593689-beb1-460a-a632-aa256df36c30"/>
+        <meta property="og:type" content="article"/>
+        <meta property="article:published_time" content="2019-07-12T00:00:00-05:00"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta property="twitter:image" content="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images/opencv/opencv-17-hog.jpg?alt=media&token=26593689-beb1-460a-a632-aa256df36c30"/>
+        <meta property="twitter:title" content="Trích đặc trưng HOG - Histograms of Oriented Gradients"/>
+        <meta name="twitter:site" content="@minhng92"/>
+        <meta name="twitter:creator" content="@Minh Nguyen"/>
+        <meta property="fb:app_id" content="280420672364181"/>
+        <script type="application/ld+json">
+            {
+                "description": "Bài báo gốc HOG đề xuất phương pháp rút trích đặc trưng sử dụng các thống kê histogram về hướng trên ảnh gradient cho bài toán phát hiện người (human detection).",
+                "author": {
+                    "@type": "Person",
+                    "name": "Minh Nguyen"
+                },
+                "@type": "BlogPosting",
+                "url": "https://minhng.info/tutorials/histograms-of-oriented-gradients.html",
+                "image": "https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images/opencv/opencv-17-hog.jpg?alt=media&token=26593689-beb1-460a-a632-aa256df36c30",
+                "headline": "Trích đặc trưng HOG - Histograms of Oriented Gradients",
+                "dateModified": "2019-07-12T00:00:00-05:00",
+                "datePublished": "2019-07-12T00:00:00-05:00",
+                "mainEntityOfPage": {
+                    "@type": "WebPage",
+                    "@id": "https://minhng.info/tutorials/histograms-of-oriented-gradients.html"
+                },
+                "@context": "https://schema.org"
+            }</script>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <title>Trích đặc trưng HOG - Histograms of Oriented Gradients</title>
+        <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="msvalidate.01" content="30BF622CBA3F744286B10166EEBD4845"/>
+        <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5235955829753330" crossorigin="anonymous"></script>
+    </head>
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Roboto" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat" rel="stylesheet">
+    <link href="/assets/css/about.css" rel="stylesheet">
+    <link href="/assets/css/bootstrap-cosmo-3.3.7.min.css" rel="stylesheet">
+    <link href="/assets/css/kalam.font.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/darcula.min.css">
+    <link href="/assets/css/simplify_styles.css" rel="stylesheet">
+    <body>
+        <div class="wrapper">
+            <nav class="navbar navbar-default navbar-expand-sm">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="/">Minh Nguyen</a>
+                        <button class="navbar-toggle" type="button" data-toggle="collapse" data-target="#navbar-items" aria-controls="navbar-items" aria-expanded="false" aria-label="Toggle navigation">
+                            <i class="fa fa-bars" aria-hidden="true" style="color:white;"></i>
+                        </button>
+                    </div>
+                    <div class="collapse navbar-collapse" id="navbar-items">
+                        <ul class="nav navbar-nav">
+                            <li class="dropdown">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                                    Categories <span class="caret"></span>
+                                </a>
+                                <ul class="dropdown-menu" role="menu">
+                                    <li>
+                                        <a href="/categories/#docker">Docker</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#tips">Tips</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#toan-hoc">Toán học</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#e-books">E-books</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#tutorials">Tutorials</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#ai">AI</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#cuoc-song">Cuộc sống</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#y-hoc">Y học</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#tieng-anh">Tiếng Anh</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#sach-hay">Sách hay</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#news">Tin tức</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#phim-hay">Phim hay</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#ubuntu">Ubuntu</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#odoo">Odoo</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#scripts">Scripts</a>
+                                    </li>
+                                    <li>
+                                        <a href="/categories/#python">Python</a>
+                                    </li>
+                                </ul>
+                            </li>
+                            <li>
+                                <a href="/hire_me.html">Contact</a>
+                            </li>
+                            <li>
+                                <a href="/about.html">About</a>
+                            </li>
+                        </ul>
+                        <ul class="nav navbar-nav navbar-right">
+                            <li>
+                                <span class="navbar-brand slogan">Sharing is Happiness</span>
+                            </li>
+                            <li>
+                                <form action="https://www.google.com/search" class="navbar-form navbar-left" role="search" method="get" name="searchform" target="_blank">
+                                    <div class="form-group">
+                                        <input name="sitesearch" type="hidden" value=minhng.info>
+                                        <input autocomplete="on" class="form-control search" name="q" placeholder="Search" required="required" type="text">
+                                    </div>
+                                    <button class="btn btn-default" type="submit">Go</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            <div id="banner" class="row page-banner">
+                <div class="col-xs-12 banner-container">
+                    <img src="" class="banner"/>
+                </div>
+            </div>
+            <div>
+                <div>
+                    <div class="row page-container">
+                        <div class="page-content col-md-9">
+                            <article id="post">
+                                <h1>Trích đặc trưng HOG - Histograms of Oriented Gradients</h1>
+                                <div class="row">
+                                    <div class="col-xs-12 additional-info">
+                                        <span>
+                                            <i class="fa fa-calendar-o" aria-hidden="true"></i>
+                                            &nbsp;Jul 12, 2019
+                                        </span>
+                                        &nbsp;&nbsp;
+                                        <span>
+                                            <i class="fa fa-clock-o" aria-hidden="true"></i>
+                                            &nbsp;2m
+                                        </span>
+                                        &nbsp;&nbsp;
+                                        <span id="views_container">
+                                            <i class="fa fa-eye" aria-hidden="true"></i>
+                                            &nbsp;<span id="views_count">0</span>
+                                        </span>
+                                        &nbsp;&nbsp;
+                                    </div>
+                                    <div class="col-xs-12">
+                                        <div class="fb-like" data-href="https://minhng.info/tutorials/histograms-of-oriented-gradients.html" data-width="" data-layout="button_count" data-action="like" data-size="small" data-share="true" data-colorscheme="dark"></div>
+                                        &nbsp;<div class="fb-save" data-uri="https://minhng.info/tutorials/histograms-of-oriented-gradients.html" data-size="small"></div>
+                                    </div>
+                                </div>
+                                <blockquote>
+                                    <p class="text-justify">OpenCV - tut 17: HOG (part 1)</p>
+                                </blockquote>
+                                <p>
+                                    <img class="feature-img-full" src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images%2Fopencv%2Fopencv-17-hog.jpg?alt=media&token=26593689-beb1-460a-a632-aa256df36c30" alt="Trích đặc trưng HOG - Histograms of Oriented Gradients"/>
+                                </p>
+                                <div class="post">
+                                    <h1 id="kiến-thức-nền-tảng">Kiến thức nền tảng</h1>
+                                    <ul>
+                                        <li>Histogram</li>
+                                        <li>Sliding windows</li>
+                                        <li>Convolution</li>
+                                        <li>Đạo hàm ảnh (image gradient)</li>
+                                    </ul>
+                                    <h1 id="giới-thiệu-hog---histograms-of-oriented-gradients">Giới thiệu HOG - Histograms of Oriented Gradients</h1>
+                                    <p>Phương pháp rút trích đặc trưng hình ảnh HOG xuất bản ở hội nghị CVPR 2005 được đề xuất bởi tác giả là Dalal và Triggs. Bạn không nghe lầm đâu, năm 2005 đấy :D. Bài báo gốc HOG đề xuất phương pháp rút trích đặc trưng sử dụng các thống kê histogram về hướng trên ảnh gradient cho bài toán phát hiện người (human detection). CVPR là một trong những hội nghị thuộc hàng đỉnh của lĩnh vực thị giác máy tính. Do đó, bài báo HOG này xuất hiện ở đó quả thật là một điều gì đó không phải là ngẫu nhiên. Mặc dù bài toán phát hiện người với những phương pháp hiện đại trong học sâu đã cho ra kết quả tốt vượt bậc đánh bại các phương pháp truyền thống. Nhưng không phải vì vậy mà mình "được phép" nhảy cóc bỏ qua những phương pháp xử lý truyền thống, đây là quan điểm cá nhân của mình.</p>
+                                    <p>
+                                        Link bài báo gốc: <a href="http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf">http://lear.inrialpes.fr/people/triggs/pubs/Dalal-cvpr05.pdf</a>
+                                    </p>
+                                    <p>Rút trích đặc trưng hình ảnh nằm ở bước nào để giải bài toán phát hiện đối tượng? Rồi, mình sẽ nêu luồng hoạt động cơ bản của các giải thuật phát hiện đối tượng:</p>
+                                    <ol>
+                                        <li>Đọc ảnh</li>
+                                        <li>Tiền xử lý (preprocessing): hình ảnh được đưa qua bước tiền xử lý để thực hiện các thao tác như cân bằng sáng, làm mờ, …</li>
+                                        <li>
+                                            Trích đặc trưng ảnh (feature extraction): bằng cách sử dụng các phương pháp rút trích đặc trưng ảnh ta sẽ thu được <strong>vector đặc trưng</strong>
+                                            của ảnh. Nói một cách nôm na thân quen đó chính là bạn mã hóa hình ảnh thành một vector, và vector này mang những đặc trưng (các số thực) đại diện cho ảnh đó.
+                                        </li>
+                                        <li>
+                                            Huấn luyện mô hình học máy (training): với phương pháp truyền thống, ta thường sử dụng mô hình SVM trong <strong>machine learning</strong>
+                                            để phân tách các vector đặc trưng thành các lớp cần phân loại.
+                                        </li>
+                                        <li>Kiểm thử (validation): sau khi huấn luyện xong mô hình học máy bạn cần phải đánh giá mô hình mình đã huấn luyện đạt độ chính xác là bao nhiêu phần trăm trên tập kiểm thử này. Khi bạn đã hài lòng với kết quả kiểm thử, ta có thể dừng quá trình huấn luyện.</li>
+                                    </ol>
+                                    <p>Đấy!! Trích đặc trưng ảnh nằm ở bước số 2. Đặc trưng hình ảnh rút trích có tốt hay không sẽ ảnh hưởng đến kết quả của độ chính xác. Vì vậy, ở các phương pháp truyền thống, họ đưa ra các thiết kế nhằm cố gắng rút trích thông tin hình ảnh một cách tốt nhất.</p>
+                                    <p>Sau khi huấn luyện xong mô hình SVM, quá trình kiểm tra (testing) sẽ thay đổi một chút ở bước 3 và bước 4. Cụ thể là ta dùng các trọng số của SVM đã tính toán được để tiến hành phân lớp, chứ không phải cần tối ưu hóa các trọng số này như trong quá trình huấn luyện. Bước 4 là ta sẽ đánh giá kết quả dự đoán bằng định tính (xem bằng mắt coi nó phát hiện đối tượng có hợp lý không) hoặc định lượng (cân đo đong đếm % độ chính xác).</p>
+                                    <h1 id="hiện-thực-giải-thuật-hog">Hiện thực giải thuật HOG</h1>
+                                    <p>
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/post-images%2Fopencv%2FHOG-overview.png?alt=media&amp;token=5d7052ed-5f8c-4b85-ae03-bc1ef8c6ec6e" alt="HOG tổng quan" style="width:100%;"/>
+                                    </p>
+                                    <p>(nguồn ảnh: bài báo gốc HOG)</p>
+                                    <p>Mình sẽ đi chi tiết từng bước 1 nhé. Ở mỗi bước mình sẽ minh họa những script ngắn, còn code HOG dùng được sẽ post ở cuối bài viết này. Tại thời điểm viết code cho bài viết ngay lúc này, mình đang tham khảo bài báo gốc của tác giả để hiện thực. Vì vậy, mọi người hãy cố gắng rèn luyện những kỹ năng để đọc hiểu paper nước ngoài nhé, nhất là Tiếng Anh và kiến thức nền tảng Xử lý ảnh.</p>
+                                    <h2 id="1-chuẩn-hóa-mức-sáng-và-màu-sắc-của-ảnh">1. Chuẩn hóa mức sáng và màu sắc của ảnh</h2>
+                                    <p>Việc dùng ảnh màu và các chuẩn hóa trên ảnh cho kết quả tốt hơn ảnh xám khoảng 1.5%. Thôi, ta là dân newbie mới học, khó quóa bỏ qua nhe. Đọc ảnh xám cho gọn nhẹ nè :x. Ảnh đầu vô kích thước 64x128 (w x h) pixels.</p>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="n">img</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">imread</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img_path</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">IMREAD_GRAYSCALE</span>
+                                                    <span class="p">)</span>
+                                                    <span class="n">img</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">resize</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">src</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">dsize</span>
+                                                    <span class="o">=</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">64</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">128</span>
+                                                    <span class="p">))</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <h2 id="2-tính-gradient-của-ảnh">2. Tính gradient của ảnh</h2>
+                                    <p>
+                                        Có nhiều cách đạo hàm ảnh để tính gradient như Laplacian, Sobel. Ủa ủa, sao chữ gradient quen quá vậy ta :D, thì ra là ở đây <a href="/tutorials/xu-ly-anh-opencv-gradient-la-gi.html">Gradient của ảnh là gì?</a>
+                                        . Chém chuối vậy thoai, chớ mình dùng filter 1-D đơn giản (-1, 0, 1) để convolution tính ảnh đạo hàm theo trục x, và chuyển vị của filter trên để tính ảnh đạo hàm theo trục y.
+                                    </p>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="c1"># gradient
+</span>
+                                                    <span class="n">xkernel</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">array</span>
+                                                    <span class="p">([[</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">]])</span>
+                                                    <span class="n">ykernel</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">array</span>
+                                                    <span class="p">([[</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">],</span>
+                                                    <span class="p">[</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">],</span>
+                                                    <span class="p">[</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">]])</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">filter2D</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">CV_32F</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">xkernel</span>
+                                                    <span class="p">)</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">filter2D</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">CV_32F</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">ykernel</span>
+                                                    <span class="p">)</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <h2 id="3-vote-hướng-vào-cell-histogram">3. Vote hướng vào cell (histogram)</h2>
+                                    <p>Cái đệch! Tiêu đề Vinglish vậy, thế sao chơi :(. Cứ bình tĩnh nào, để Minh giải thích từng cái một.</p>
+                                    <p>
+                                        Ở bước 2, ta đã tính được ảnh gradient theo trục x (dx) và gradient theo trục y (dy). Kích thước dx và dy đều bằng ảnh gốc, tức 64x128. Tưởng tượng rằng dx và dy là 2 tờ giấy hình chữ nhật có cùng kích thước, và bạn lấy 2 tờ giấy chồng lên nhau. Như vậy thì mỗi pixel trên dx sẽ ứng với 1 pixel ở tọa độ tương ứng trên dy. Vì vậy, với cặp giá trị này ta sẽ tính được <strong>góc</strong>
+                                        và <strong>biên độ</strong>
+                                        tại pixel đang xét!
+                                    </p>
+                                    <p>
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/post-images%2Fopencv%2Fmagnitude_2d.png?alt=media&amp;token=0c6da197-2c7c-40a0-b572-0344e80011ea" alt="magnitude" style="width:50%;"/>
+                                    </p>
+                                    <p>(nguồn ảnh: https://www.onlinemathlearning.com/vector-magnitude.html)</p>
+                                    <p>Nhìn hình ta có:</p>
+                                    <ul>
+                                        <li>Góc (hay nói cách khác là hướng) = arctan(y/x)</li>
+                                        <li>Độ lớn (biên độ) = sqrt(x * x + y * y)</li>
+                                    </ul>
+                                    <p>
+                                        Giờ đây ta có thêm một khái niệm mới chen chân vô đó là <strong>cell</strong>
+                                        (dịch: ô). Một cell được thiết kế là có kích thước 8x8 pixel (đây là siêu tham số, tác giả có tùy chỉnh và chọn 8 là giá trị hợp lý qua các thí nghiệm). Do đó ảnh đầu 64x128 thì sẽ có 8x16 = 128 cell cả thảy (8 ô ngang và 16 ô dọc).
+                                    </p>
+                                    <p>
+                                        Tiếp đến, ta xét lần lượt mỗi cell. Nhắc lại, một cell kích thước 8x8 vì vậy ta có 64 giá trị hướng và 64 giá trị biên độ trong cell đó. Ta sẽ tiến hành vote (dịch: bầu cử) hướng vào các lựa chọn góc nằm từ 0-180 độ (các góc giá trị âm sẽ được lấy trị tuyệt đối quy về 0-180 luôn). Trong cung tròn 0-180 độ này, ta chia chúng thành các 9 đoạn rời rạc (9 bin). Nếu hướng thuộc khúc nào thì ta vote vào bin đó. Quá trình vote này gọi là tính toán / thống kê <strong>Histogram</strong>
+                                        .
+                                    </p>
+                                    <p>Cụ thể:</p>
+                                    <ul>
+                                        <li>Hướng 0-20 độ: ta sẽ vote hướng thuộc đoạn này vào bin 0</li>
+                                        <li>Hướng 20-40 độ: bin 1</li>
+                                        <li>Hướng 40-60 độ: bin 2</li>
+                                        <li>Hướng 60-80 độ: bin 3</li>
+                                        <li>Hướng 80-100 độ: bin 4</li>
+                                        <li>Hướng 100-120 độ: bin 5</li>
+                                        <li>Hướng 120-140 độ: bin 6</li>
+                                        <li>Hướng 140-160 độ: bin 7</li>
+                                        <li>Hướng 160-180 độ: bin 8</li>
+                                    </ul>
+                                    <p>
+                                        Khi có hướng rơi vào bin, ta không vote kiểu bình thường là giá trị trong bin tăng lên 1 đơn vị, mà ta sẽ tăng lên một giá trị bằng biên độ của hướng đó. Ví dụ: hướng 42 độ, biên độ 0.27 =&gt;<strong>vote vào bin 2, giá trị bin 2 += 0.27</strong>
+                                        . Hướng của các pixel trong cell vote vào bin nào thì giá trị bin đó tăng dần lên.
+                                    </p>
+                                    <p>Sau khi vote xong, ta có 8x16 cell, mỗi cell có 9 bin.</p>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="c1"># histogram
+</span>
+                                                    <span class="n">magnitude</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">sqrt</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">square</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="p">)</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">square</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="p">))</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">arctan</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">divide</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="o">+</span>
+                                                    <span class="mf">0.00001</span>
+                                                    <span class="p">))</span>
+                                                    <span class="c1"># radian
+</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">degrees</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># -90 -&gt;90
+</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">+=</span>
+                                                    <span class="mi">90</span>
+                                                    <span class="c1"># 0 -&gt;180
+</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">w</span>
+                                                    <span class="o">//</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="c1"># 8
+</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">h</span>
+                                                    <span class="o">//</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="c1"># 16
+</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">zeros</span>
+                                                    <span class="p">([</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">])</span>
+                                                    <span class="c1"># 16 x 8 x 9
+</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="p">):</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="p">):</span>
+                                                    <span class="n">ori</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">]</span>
+                                                    <span class="n">mag</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">magnitude</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">]</span>
+                                                    <span class="c1"># https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram.html
+</span>
+                                                    <span class="n">hist</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">_</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">histogram</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">ori</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">,</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="o">=</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">180</span>
+                                                    <span class="p">),</span>
+                                                    <span class="n">weights</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">mag</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># 1-D vector, 9 elements
+</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">hist</span>
+                                                    <span class="k">pass</span>
+                                                    <span class="k">pass</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <h2 id="4-chuẩn-hóa-theo-block">4. Chuẩn hóa theo block</h2>
+                                    <p>Tại sao ta cần phải chuẩn hóa ở bước này? Vì hiện tại mỗi cell đang mang trong mình histogram trên vùng ảnh 8x8, các thông tin này mang tính chất cục bộ. Vì vậy tác giả đã đưa ra nhiều cách chuẩn hóa khác nhau dựa trên các khối (block) chồng lấn (overlap) nhau.</p>
+                                    <p>
+                                        Đến đây ta cần biết 1 block là gì. Một block gồm nhiều cell, block 2x2 nghĩa là ta có vùng diện tích của 4 cell liền kề –&gt;block này sẽ phủ trên diện tích = 16x16 pixel. Trong quá trình chuẩn hóa, ta sẽ lần lượt chuẩn hóa block 2x2 đầu tiên, rồi dịch block đó sang 1 cell và cũng thực hiện chuẩn hóa cho block này. Như vậy, giữa block đầu tiên và block liền kề đã có sự chồng lấn cell lẫn nhau (2 cell), trong tiếng Anh người ta dùng từ <strong>overlap</strong>
+                                        .
+                                    </p>
+                                    <p>
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/post-images%2Fopencv%2Fhog-16x16-block-normalization.gif?alt=media&amp;token=b797c2ad-d799-442e-b8c1-8e03d2b2f5a0" alt="hog-16x16-block-normalization.gif"/>
+                                    </p>
+                                    <p>(nguồn ảnh: https://www.learnopencv.com/histogram-of-oriented-gradients/)</p>
+                                    <p>Thao tác cụ thể chuẩn hóa cho mỗi block Minh sẽ dùng L2-Norm (cho dễ hiện thực, ahihi). Cách làm là mình lấy tất cả vector của 4 cell trong block đang xét nối lại với nhau thành vector v. Vector v có 9 x 4 = 36 phần tử. Sau đó ta chuẩn hóa (tính toán lại vector v) theo công thức bên bên dưới:</p>
+                                    <p>
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/post-images%2Fopencv%2Fl2-norm.png?alt=media&amp;token=1da08abb-c797-4ba4-a239-e17febbd6d7a" alt="l2-norm"/>
+                                    </p>
+                                    <p>(nguồn ảnh: bài báo gốc HOG)</p>
+                                    <p>Bản chất của chuẩn hóa L1-norm, L2-norm đó là:</p>
+                                    <ul>
+                                        <li>L1-norm: sau chuẩn hóa, tổng các giá trị của những phần tử trong vector bằng 1.</li>
+                                        <li>L2-norm: sau chuẩn hóa, độ dài vector bằng 1.</li>
+                                    </ul>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="c1"># normalization
+</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">zeros</span>
+                                                    <span class="p">([</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">])</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">):</span>
+                                                    <span class="c1"># 7
+</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">by</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">):</span>
+                                                    <span class="c1"># 15
+</span>
+                                                    <span class="n">by_from</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">by</span>
+                                                    <span class="n">by_to</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">by</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="n">bx_from</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="n">bx_to</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="n">v</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by_from</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">by_to</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx_from</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">bx_to</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:].</span>
+                                                    <span class="n">flatten</span>
+                                                    <span class="p">()</span>
+                                                    <span class="c1"># to 1-D array (vector)
+</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">v</span>
+                                                    <span class="o">/</span>
+                                                    <span class="n">LA</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">norm</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">v</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">2</span>
+                                                    <span class="p">)</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <h2 id="5-trích-vector-đặc-trưng-của-các-block-đã-chuẩn-hóa-cho-ảnh-64x128">5. Trích vector đặc trưng của các block đã chuẩn hóa cho ảnh 64x128</h2>
+                                    <p>
+                                        Đến đây coi như xong rồi á. Block kích thước 2x2 chuẩn hóa trên các block overlap, như vậy tổng cộng ta sẽ có 7x15 block cả thảy. Mỗi block mang trong mình 4 cell (2x2), mỗi cell có 9 bin. Từ đó, nếu ta phẳng hóa toàn bộ đặc trưng của tất cả các block có trên ảnh 64x128 ta sẽ được 1 vector đặc trưng có: 7 x 15 x 4 x 9 = <strong>3780</strong>
+                                        phần tử!
+                                    </p>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="k">return</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">flatten</span>
+                                                    <span class="p">()</span>
+                                                    <span class="c1"># 3780 features
+</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <h1 id="code-hiện-thực-hog">Code hiện thực HOG</h1>
+                                    <p>Made by Minh (vỏn vẹn 65 dòng code). Cách sử dụng:</p>
+                                    <div class="language-plaintext highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>python hog.py
+</code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <p>
+                                        <strong>hog.py</strong>
+                                    </p>
+                                    <div class="language-python highlighter-rouge">
+                                        <div class="highlight">
+                                            <pre class="highlight">
+                                                <code>
+                                                    <span class="kn">import</span>
+                                                    <span class="nn">os</span>
+                                                    <span class="kn">import</span>
+                                                    <span class="nn">cv2</span>
+                                                    <span class="kn">import</span>
+                                                    <span class="nn">numpy</span>
+                                                    <span class="k">as</span>
+                                                    <span class="n">np</span>
+                                                    <span class="kn">from</span>
+                                                    <span class="nn">numpy</span>
+                                                    <span class="kn">import</span>
+                                                    <span class="n">linalg</span>
+                                                    <span class="k">as</span>
+                                                    <span class="n">LA</span>
+                                                    <span class="n">IMG</span>
+                                                    <span class="o">=</span>
+                                                    <span class="s">'person.jpg'</span>
+                                                    <span class="k">def</span>
+                                                    <span class="nf">hog</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img_gray</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">=</span>
+                                                    <span class="mi">8</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">=</span>
+                                                    <span class="mi">2</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="o">=</span>
+                                                    <span class="mi">9</span>
+                                                    <span class="p">):</span>
+                                                    <span class="n">img</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">img_gray</span>
+                                                    <span class="n">h</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">w</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">shape</span>
+                                                    <span class="c1"># 128, 64
+</span>
+                                                    <span class="c1"># gradient
+</span>
+                                                    <span class="n">xkernel</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">array</span>
+                                                    <span class="p">([[</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">]])</span>
+                                                    <span class="n">ykernel</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">array</span>
+                                                    <span class="p">([[</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">],</span>
+                                                    <span class="p">[</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">],</span>
+                                                    <span class="p">[</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="p">]])</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">filter2D</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">CV_32F</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">xkernel</span>
+                                                    <span class="p">)</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">filter2D</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">CV_32F</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">ykernel</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># histogram
+</span>
+                                                    <span class="n">magnitude</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">sqrt</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">square</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="p">)</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">square</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="p">))</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">arctan</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">divide</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">dy</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">dx</span>
+                                                    <span class="o">+</span>
+                                                    <span class="mf">0.00001</span>
+                                                    <span class="p">))</span>
+                                                    <span class="c1"># radian
+</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">degrees</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># -90 -&gt;90
+</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="o">+=</span>
+                                                    <span class="mi">90</span>
+                                                    <span class="c1"># 0 -&gt;180
+</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">w</span>
+                                                    <span class="o">//</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="c1"># 8
+</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">h</span>
+                                                    <span class="o">//</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="c1"># 16
+</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">zeros</span>
+                                                    <span class="p">([</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">])</span>
+                                                    <span class="c1"># 16 x 8 x 9
+</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="p">):</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="p">):</span>
+                                                    <span class="n">ori</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">orientation</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">]</span>
+                                                    <span class="n">mag</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">magnitude</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">cell_size</span>
+                                                    <span class="p">]</span>
+                                                    <span class="c1"># https://docs.scipy.org/doc/numpy/reference/generated/numpy.histogram.html
+</span>
+                                                    <span class="n">hist</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">_</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">histogram</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">ori</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">,</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="o">=</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">0</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">180</span>
+                                                    <span class="p">),</span>
+                                                    <span class="n">weights</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">mag</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># 1-D vector, 9 elements
+</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">cy</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">hist</span>
+                                                    <span class="k">pass</span>
+                                                    <span class="k">pass</span>
+                                                    <span class="c1"># normalization
+</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">-</span>
+                                                    <span class="mi">1</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">zeros</span>
+                                                    <span class="p">([</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="o">*</span>
+                                                    <span class="n">bins</span>
+                                                    <span class="p">])</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_x</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">):</span>
+                                                    <span class="c1"># 7
+</span>
+                                                    <span class="k">for</span>
+                                                    <span class="n">by</span>
+                                                    <span class="ow">in</span>
+                                                    <span class="nb">range</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">num_cell_y</span>
+                                                    <span class="o">-</span>
+                                                    <span class="n">redundant_cell</span>
+                                                    <span class="p">):</span>
+                                                    <span class="c1"># 15
+</span>
+                                                    <span class="n">by_from</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">by</span>
+                                                    <span class="n">by_to</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">by</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="n">bx_from</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="n">bx_to</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="o">+</span>
+                                                    <span class="n">block_size</span>
+                                                    <span class="n">v</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">hist_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by_from</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">by_to</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx_from</span>
+                                                    <span class="p">:</span>
+                                                    <span class="n">bx_to</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:].</span>
+                                                    <span class="n">flatten</span>
+                                                    <span class="p">()</span>
+                                                    <span class="c1"># to 1-D array (vector)
+</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">v</span>
+                                                    <span class="o">/</span>
+                                                    <span class="n">LA</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">norm</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">v</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">2</span>
+                                                    <span class="p">)</span>
+                                                    <span class="c1"># avoid NaN:
+</span>
+                                                    <span class="k">if</span>
+                                                    <span class="n">np</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">isnan</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]).</span>
+                                                    <span class="nb">any</span>
+                                                    <span class="p">():</span>
+                                                    <span class="c1"># avoid NaN (zero division)
+</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">[</span>
+                                                    <span class="n">by</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">bx</span>
+                                                    <span class="p">,</span>
+                                                    <span class="p">:]</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">v</span>
+                                                    <span class="k">return</span>
+                                                    <span class="n">feature_tensor</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">flatten</span>
+                                                    <span class="p">()</span>
+                                                    <span class="c1"># 3780 features
+</span>
+                                                    <span class="k">def</span>
+                                                    <span class="nf">main</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img_path</span>
+                                                    <span class="p">):</span>
+                                                    <span class="n">img</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">imread</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img_path</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">IMREAD_GRAYSCALE</span>
+                                                    <span class="p">)</span>
+                                                    <span class="n">img</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">cv2</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">resize</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">src</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">dsize</span>
+                                                    <span class="o">=</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">64</span>
+                                                    <span class="p">,</span>
+                                                    <span class="mi">128</span>
+                                                    <span class="p">))</span>
+                                                    <span class="n">f</span>
+                                                    <span class="o">=</span>
+                                                    <span class="n">hog</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">img</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'Extracted feature vector of %s. Shape:'</span>
+                                                    <span class="o">%</span>
+                                                    <span class="n">img_path</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'Feature size:'</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">f</span>
+                                                    <span class="p">.</span>
+                                                    <span class="n">shape</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'Features (HOG):'</span>
+                                                    <span class="p">,</span>
+                                                    <span class="n">f</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">pass</span>
+                                                    <span class="k">if</span>
+                                                    <span class="n">__name__</span>
+                                                    <span class="o">==</span>
+                                                    <span class="s">"__main__"</span>
+                                                    <span class="p">:</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'Start running HOG on image @ %s'</span>
+                                                    <span class="o">%</span>
+                                                    <span class="n">IMG</span>
+                                                    <span class="p">)</span>
+                                                    <span class="n">main</span>
+                                                    <span class="p">(</span>
+                                                    <span class="n">IMG</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'* Follow me @ '</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">"</span>
+                                                    <span class="se">\x1b</span>
+                                                    <span class="s">[1;%dm"</span>
+                                                    <span class="o">%</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">34</span>
+                                                    <span class="p">)</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">' https://www.facebook.com/minhng.info/'</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">"</span>
+                                                    <span class="se">\x1b</span>
+                                                    <span class="s">[0m"</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'* Join GVGroup for discussion @ '</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">"</span>
+                                                    <span class="se">\x1b</span>
+                                                    <span class="s">[1;%dm"</span>
+                                                    <span class="o">%</span>
+                                                    <span class="p">(</span>
+                                                    <span class="mi">34</span>
+                                                    <span class="p">)</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">'https://www.facebook.com/groups/ip.gvgroup/'</span>
+                                                    <span class="o">+</span>
+                                                    <span class="s">"</span>
+                                                    <span class="se">\x1b</span>
+                                                    <span class="s">[0m"</span>
+                                                    <span class="p">)</span>
+                                                    <span class="k">print</span>
+                                                    <span class="p">(</span>
+                                                    <span class="s">'* Thank you ^^~'</span>
+                                                    <span class="p">)</span>
+                                                </code>
+                                            </pre>
+                                        </div>
+                                    </div>
+                                    <p>
+                                        <strong>person.jpg</strong>
+                                        (ảnh này đặt cạnh file <strong>hog.py</strong>
+                                        , hoặc dùng ảnh khác của bạn có cùng tên file)
+                                    </p>
+                                    <p>
+                                        <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/post-images%2Fopencv%2Fperson.jpg?alt=media&amp;token=05b7039c-a4fd-4a03-8bbf-e0bb252d40dd" alt="person.jpg - midu" style="width:25%;"/>
+                                    </p>
+                                    <hr/>
+                                    <p>
+                                        <strong>Cảm ơn bạn đã theo dõi bài viết</strong>
+                                        . Hãy kết nối với tớ nhé!
+                                    </p>
+                                    <ul>
+                                        <li>
+                                            <i class="fa fa-facebook-square" aria-hidden="true"></i>
+                                            Minh: <a href="https://www.facebook.com/minhng.info">https://www.facebook.com/minhng.info</a>
+                                        </li>
+                                        <li>
+                                            <i class="fa fa-facebook-square" aria-hidden="true"></i>
+                                            Khám phá xử lý ảnh - GVGroup: <a href="https://www.facebook.com/groups/ip.gvgroup">https://www.facebook.com/groups/ip.gvgroup</a>
+                                        </li>
+                                    </ul>
+                                    <div class="fb-group" data-href="https://www.facebook.com/groups/ip.gvgroup/" data-width="" data-show-metadata="false">
+                                        <blockquote cite="https://www.facebook.com/groups/ip.gvgroup/" class="fb-xfbml-parse-ignore">Khám phá xử lý ảnh - GVGroup</blockquote>
+                                    </div>
+                                    <p>
+                                        <br/>
+                                    </p>
+                                    <p>Danh sách bài viết series OpenCV:</p>
+                                    <ul>
+                                        <li>
+                                            <a href="/tags/#opencv">Hashtag #OpenCV</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-doc-ghi-anh-python-c.html">Tut 1: Xử lý ảnh - OpenCV đọc ghi hình ảnh (code Python và C++)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-cau-truc-du-lieu-anh.html">Tut 1.1: Xử lý ảnh - Cấu trúc dữ liệu ảnh trong OpenCV. Pixel là gì?</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/convert-opencv-pillow-opencv.html">Tut 1.2: Xử lý ảnh - Chuyển đổi ảnh OpenCV sang Pillow và ngược lại</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-resize-crop-padding-anh.html">Tut 2: Xử lý ảnh - OpenCV resize, crop và padding hình ảnh (code Python và C++)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-bien-doi-muc-sang-hinh-anh.html">Tut 3: Xử lý ảnh - OpenCV biến đổi mức sáng hình ảnh (code Python)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-region-of-interest-roi-la-gi.html">Tut 4: Xử lý ảnh - OpenCV vùng quan tâm (ROI) là gì? (code Python)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/draw-text-line-arrow-rect-circle-ellipse-poly-opencv.html">Tut 4.1: Xử lý ảnh - OpenCV: vẽ văn bản, đường thẳng, mũi tên, hình chữ nhật, hình tròn, ellipse, đa giác</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/blending-anh-opencv.html">Tut 4.2: Xử lý ảnh - Pha trộn ảnh trong OpenCV (blending)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/opencv-anh-nhi-phan.html">Tut 5: Xử lý ảnh - OpenCV ảnh nhị phân</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-opencv-can-bang-sang-histogram-equalization.html">Tut 6: Xử lý ảnh - OpenCV cân bằng sáng (histogram equalization)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-opencv-cua-so-truot-sliding-window.html">Tut 7: Xử lý ảnh - OpenCV kỹ thuật cửa sổ trượt (sliding window)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-convolution-la-gi.html">Tut 8: Xử lý ảnh - Convolution là gì?</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-bo-loc-lam-mo-blur.html">Tut 9: Xử lý ảnh - Làm mờ ảnh (blur)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-opencv-gradient-la-gi.html">Tut 10: Xử lý ảnh - Gradient của ảnh là gì?</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/xu-ly-anh-opencv-hien-thuc-canny-edge.html">Tut 11: Xử lý ảnh - Phát hiện cạnh Canny (Canny Edge Detection)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/phat-hien-duong-thang-hough-transform.html">Tut 12: Xử lý ảnh - Phát hiện đường thẳng bằng Hough Transform (Hough Line)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/phat-hien-doan-thang-hough-transform.html">Tut 13: Xử lý ảnh - Hiện thực phát hiện đoạn thẳng dùng Hough Transform (Hough Line)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/giai-thuat-phan-vung-region-growing.html">Tut 14: Xử lý ảnh - Giải thuật phân vùng Region Growing trên ảnh màu</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/giai-thuat-background-subtraction-anh-mau.html">Tut 15: Xử lý ảnh - Giải thuật Background Subtraction trên ảnh màu</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/frame-subtraction-phat-hien-chuyen-dong-video.html">Tut 16: Xử lý ảnh - Frame Subtraction để phát hiện chuyển động trong video</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/histograms-of-oriented-gradients.html">Tut 17: Xử lý ảnh - HOG - Histograms of Oriented Gradients</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/hog-huan-luyen-mo-hinh-phan-loai-nguoi.html">Tut 18: Xử lý ảnh - HOG - Huấn luyện mô hình phân loại người</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/hog-phat-hien-nguoi.html">Tut 19: Xử lý ảnh - HOG - Phát hiện người</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/tong-hop-kinh-nghiem-xu-ly-anh.html">Tut 20: Xử lý ảnh - Tổng hợp kinh nghiệm xử lý ảnh (End)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/local-binary-patterns-lbp-opencv.html">Tut 21: Xử lý ảnh - Hiện thực trích đặc trưng Local Binary Patterns (LBP)</a>
+                                        </li>
+                                        <li>
+                                            <a href="/tutorials/gabor-filters-opencv.html">Tut 22: Xử lý ảnh - Trích đặc trưng Gabor filters</a>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <br/>
+                                <div class="author-section">
+                                    <a href="https://www.facebook.com/minhng.info">Minh Nguyen</a>
+                                    <br/>
+                                    <br/>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12 share-container">
+                                        <div>
+                                            <h4 class="share-callout">Share this:</h4>
+                                            &nbsp;
+                                            <a href="https://www.pinterest.com/pin/create/button/?url=https://minhng.info/tutorials/histograms-of-oriented-gradients.html&media=https://minhng.infohttps://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images%2Fopencv%2Fopencv-17-hog.jpg?alt=media&token=26593689-beb1-460a-a632-aa256df36c30&description=Trích đặc trưng HOG - Histograms of Oriented Gradients" class="share-icon pinterest-color" rel="nofollow" target="_blank" title="Share on Pinterest">
+                                                <i class="fa fa-pinterest" aria-hidden="true"></i>
+                                            </a>
+                                            &nbsp;
+                                            <a href="https://facebook.com/sharer.php?u=https://minhng.info/tutorials/histograms-of-oriented-gradients.html" class="share-icon facebook-color" rel="nofollow" target="_blank" title="Share on Facebook">
+                                                <i class="fa fa-facebook" aria-hidden="true"></i>
+                                            </a>
+                                            &nbsp;
+                                            <a href="https://twitter.com/intent/tweet?text=Trích đặc trưng HOG - Histograms of Oriented Gradients&url=https://minhng.info/tutorials/histograms-of-oriented-gradients.html&via=minhng92&hashtags=xulyanh,opencv,imageprocessing" class="share-icon twitter-color" rel="nofollow" target="_blank" title="Share on Twitter">
+                                                <i class="fa fa-twitter" aria-hidden="true"></i>
+                                            </a>
+                                            &nbsp;
+                                            <a href="http://www.linkedin.com/shareArticle?mini=true&url=https://minhng.info/tutorials/histograms-of-oriented-gradients.html&title=Trích đặc trưng HOG - Histograms of Oriented Gradients&summary=OpenCV - tut 17: HOG (part 1)&source=https://minhng.info" class="share-icon linkedin-color" rel="nofollow" target="_blank" title="Share on LinkedIn">
+                                                <i class="fa fa-linkedin" aria-hidden="true"></i>
+                                            </a>
+                                            &nbsp;
+                                            <a href="https://plus.google.com/share?url=https://minhng.info/tutorials/histograms-of-oriented-gradients.html" class="share-icon google-plus-color" rel="nofollow" target="_blank" title="Share on Google Plus">
+                                                <i class="fa fa-google-plus" aria-hidden="true"></i>
+                                            </a>
+                                            &nbsp;
+                                            <a href="http://www.reddit.com/submit?url=https://minhng.info/tutorials/histograms-of-oriented-gradients.html&title=Trích đặc trưng HOG - Histograms of Oriented Gradients" class="share-icon reddit-color" rel="nofollow" target="_blank" title="Share on Reddit">
+                                                <i class="fa fa-reddit" aria-hidden="true"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-xs-12">
+                                        <ul class="nav nav-pills">
+                                            <li>
+                                                <a class="h4" href="/tags/#xulyanh">#xulyanh</a>
+                                            </li>
+                                            <li>
+                                                <a class="h4" href="/tags/#opencv">#opencv</a>
+                                            </li>
+                                            <li>
+                                                <a class="h4" href="/tags/#imageprocessing">#imageprocessing</a>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </article>
+                            <div class="row posts-related-tags">
+                                <div class="col-sm-4">
+                                    <a href="/tutorials/convert-opencv-pillow-opencv.html">
+                                        <p>
+                                        <div class="feature-img-16-9" style="background-image: url('https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/opencv_opencv_pillow.jpg?alt=media&token=1de53ccd-789f-46e5-91a6-4fdd83767719');"></div>
+</p><p>
+<h4 class="title-in-one-line">Chuyển đổi ảnh OpenCV sang Pillow và ngược lại</h4>
+</p></a></div>
+<div class="col-sm-4">
+    <a href="/tutorials/blending-anh-opencv.html">
+        <p>
+        <div class="feature-img-16-9" style="background-image: url('https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/opencv-blending.jpg?alt=media&token=d050ba23-ffc2-4fbe-a769-a1d285462da3');"></div>
+</p><p>
+<h4 class="title-in-one-line">Pha trộn ảnh trong OpenCV (blending)</h4>
+</p></a></div>
+<div class="col-sm-4">
+    <a href="/tutorials/gabor-filters-opencv.html">
+        <p>
+        <div class="feature-img-16-9" style="background-image: url('https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/opencv-gabor.jpg?alt=media&token=a488e7f8-0d4b-4d9e-913c-753d5305b28b');"></div>
+</p><p>
+<h4 class="title-in-one-line">Trích đặc trưng Gabor filters (OpenCV)</h4>
+</p></a></div></div><p>
+<div id="social-comments-tab">
+    <ul class="nav nav-tabs">
+        <li class="h4 active" onclick="javascript:setUserCommentPreference('facebook');">
+            <a id="tab-facebook" href="#facebook" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-comment-o" aria-hidden="true"></i>
+                &nbsp;Facebook &nbsp;(<span class="fb-comments-count" data-href="https://minhng.info/tutorials/histograms-of-oriented-gradients.html"></span>
+                )
+            </a>
+        </li>
+    </ul>
+    <div id="comments_in_social" class="tab-content">
+        <div class="tab-pane fade active in" id="facebook">
+            <p>
+            <div class="fb-comments" data-href="https://minhng.info/tutorials/histograms-of-oriented-gradients.html" data-width="100%" data-numposts="5" data-colorscheme="dark"></div>
+        </div>
+    </div>
+</div>
+</div>
+<div class="page-side-info col-md-3">
+    <div class="fb-page" data-href="https://www.facebook.com/minhng.info/" data-tabs="" data-width="" data-height="" data-small-header="false" data-adapt-container-width="true" data-hide-cover="false" data-show-facepile="true">
+        <blockquote cite="https://www.facebook.com/minhng.info/" class="fb-xfbml-parse-ignore">
+            <a href="https://www.facebook.com/minhng.info/">Minh</a>
+        </blockquote>
+    </div>
+    <hr/>
+    <div class="fb-group" data-href="https://www.facebook.com/groups/ip.gvgroup/" data-width="" data-show-metadata="false">
+        <blockquote cite="https://www.facebook.com/groups/ip.gvgroup/" class="fb-xfbml-parse-ignore">Khám phá xử lý ảnh - GVGroup</blockquote>
+    </div>
+    <hr/>
+    <div class="row related-posts">
+        <div>
+            <div>
+                <p>
+                <h4>
+                    <a class="h4-light" href="/odoo/them-button-form-odoo.html">Thêm button cho form view trong Odoo</a>
+                </h4>
+</p><p class="small text-justify">Tut 18: Button @ form view</p>
+</div>
+<div>
+    <p>
+    <h4>
+        <a class="h4-light" href="/docker/supabase-docker-compose.html">Deploying Supabase with Docker Compose</a>
+    </h4>
+</p><p class="small text-justify">Supabase Docker Compose</p>
+</div>
+<div>
+    <p>
+    <h4>
+        <a class="h4-light" href="/odoo/tra-cuu-ma-nguon-lap-trinh-odoo.html">Tra cứu mã nguồn để lập trình Odoo</a>
+    </h4>
+</p><p class="small text-justify">Tut 17: Tra cứu mã nguồn để lập trình Odoo</p>
+</div>
+<div>
+    <p>
+    <h4>
+        <a class="h4-light" href="/docker/docker-compose-odoo-18.html">Quickly Set Up Odoo 18 in Docker: Install in Under 1 Minute</a>
+    </h4>
+</p><p class="small text-justify">Create Development and Production Environments for Odoo 18 (2024 Release) Using Docker Compose on Ubuntu</p>
+</div>
+<div>
+    <p>
+    <h4>
+        <a class="h4-light" href="/docker/docker-compose-odoo-17.html">Docker for Odoo 17 - get Odoo within 1 minute</a>
+    </h4>
+</p><p class="small text-justify">Set up Odoo 17 (released 2023) develop and production environment with Docker Compose in Ubuntu.</p>
+</div>
+<div>
+    <p>
+    <h4>
+        <a class="h4-light" href="/docker/docker-compose-zabbix-agent2.html">Giám sát Docker Container với Zabbix Agent 2</a>
+    </h4>
+</p><p class="small text-justify">Giám sát Docker Container với Zabbix Agent 2</p>
+</div></div></div><script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5235955829753330" crossorigin="anonymous"></script>
+<ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-5235955829753330" data-ad-slot="8265260228" data-ad-format="auto" data-full-width-responsive="true"></ins>
+<script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+<hr/>
+<div class="row related-posts" style="max-width: 450px;">
+    <a target="_blank" href="https://me.momo.vn/minhng">
+        <div>
+            <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images%2Fdonation%2Ficonfinder_2117112_arrow_arrows_direction_down_left_icon_%23444444.svg?alt=media&token=51014842-a438-4cae-9f8e-e8b4d4fa8f2a" style="width:20%; display:block; margin-top: 0px; margin-bottom: 0px; margin-left: 45%; margin-right: auto; transform: rotate(0deg);"/>
+        </div>
+        <div>
+            <img src="https://firebasestorage.googleapis.com/v0/b/minh-nguyen-blog.appspot.com/o/images%2Fdonation%2Fminh_momo_2025.jpg?alt=media&token=2fbd0b11-42c1-43a5-89c1-a7d99cbc977d" style="width: 100%; margin: 0 auto; display: block;">
+        </div>
+    </a>
+</div>
+</div></div>
+<a id="go_to_top" href="javascript:topFunction();" class="go-to-top-button">
+    <i class="fa fa-angle-up fa-2x" aria-hidden="true" title="Go to Top"></i>
+</a>
+<script>
+    function scrollFunction() {
+        20 < document.body.scrollTop || 20 < document.documentElement.scrollTop ? document.getElementById("go_to_top").style.display = "block" : document.getElementById("go_to_top").style.display = "none"
+    }
+    function topFunction() {
+        document.body.scrollTop = 0,
+        document.documentElement.scrollTop = 0
+    }
+    window.onscroll = function() {
+        scrollFunction()
+    }
+    ;
+</script>
+</div><script>
+    document.getElementById("banner").style.display = "none";
+</script>
+</div><br/>
+<br/>
+<div class="row">
+    <div class="col-xs-12 footer">
+        <div class="page-container">Minh Nguyen &copy;2025 </div>
+    </div>
+</div>
+</div><script defer src="/assets/js/jquery-3.2.1.min.js"></script>
+<script defer src="/assets/js/bootstrap-3.3.7.min.js"></script>
+<script defer src="/assets/js/minh_stats.js"></script>
+<script defer src="/assets/js/simplify.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>
+    !function(e, a, t, n, c, o, s) {
+        e.GoogleAnalyticsObject = c,
+        e[c] = e[c] || function() {
+            (e[c].q = e[c].q || []).push(arguments)
+        }
+        ,
+        e[c].l = 1 * new Date,
+        o = a.createElement(t),
+        s = a.getElementsByTagName(t)[0],
+        o.async = 1,
+        o.src = n,
+        s.parentNode.insertBefore(o, s)
+    }(window, document, "script", "//www.google-analytics.com/analytics.js", "ga"),
+    ga("create", "UA-55607069-4", "auto"),
+    ga("send", "pageview");
+</script>
+--><div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v11.0&appId=280420672364181&autoLogAppEvents=1" nonce="VHpEiSSN"></script>
+</body></html>
