@@ -238,26 +238,8 @@ def extract_seasonal_features(image):
 
     return np.array([summer_ratio, autumn_ratio, winter_ratio, spring_ratio])
 
-'''
-Độ tương phản (contrast) trong ảnh đề cập đến mức độ khác biệt giữa các giá trị pixel. Trong ngữ cảnh của kênh Hue (màu sắc):
-Độ tương phản cao: Ảnh có nhiều màu khác biệt rõ rệt (như núi mùa thu với lá đỏ, vàng, xanh)
-Độ tương phản thấp: Ảnh có màu đồng nhất (như núi tuyết chủ yếu màu trắng)
 
-Giá trị trung bình của tất cả pixel trong kênh Hue cho biết "màu sắc trung bình" trong ảnh
-Độ lệch chuẩn đo lường mức độ phân tán của các giá trị pixel
-Giá trị cao: các pixel có màu sắc phân tán xa giá trị trung bình
-Giá trị thấp: các pixel có màu sắc tập trung gần giá trị trung bình
-hệ số biến thiên: độ lệch chuẩn chia cho giá trị trung bình
-'''
 def extract_color_contrast(image):
-    """
-    Đo cách phân bố và độ chênh lệch của màu
-    Phân biệt sự tương phản màu sắc trong cảnh núi:
-    Giá trị h_contrast cao: Núi với nhiều dải màu đối lập (như mùa thu với lá đỏ, vàng, xanh)
-    Giá trị h_contrast thấp: Núi với màu đồng nhất (như núi tuyết trắng)
-    :param image:
-    :return:
-    """
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     h, s, v = cv2.split(hsv)
 
@@ -273,20 +255,7 @@ def extract_color_contrast(image):
 
     return np.array([h_mean, h_std, h_contrast, s_mean, s_std, s_contrast, v_mean, v_std, v_contrast])
 
-
 '''
-Hai cảnh núi có thể có cùng số lượng màu nhưng phân bố khác nhau
-Ví dụ thực tế:  
-Cảnh núi A: Núi có 3 màu chính sắp xếp theo dải rõ rệt  
-Đỉnh núi màu trắng (tuyết)
-Giữa núi màu xanh (rừng)
-Bầu trời màu xanh dương
-Cảnh núi B: Núi có 3 màu chính nhưng phân bố xen kẽ  
-Tuyết và đá xám phân bố rải rác
-Các mảng thực vật xanh lẫn giữa đá
-Bầu trời xanh lẫn mây trắng
-→ extract_weighted_diversity sẽ cho giá trị tương tự (vì cùng số lượng màu) → extract_color_contrast sẽ cho giá trị khác biệt (vì phân phối khác nhau)
-
 Hai cảnh núi có thể có độ tương phản tương tự nhưng một cảnh đa dạng hơn về màu sắc
 Cảnh núi C: Núi tuyết trắng dưới bầu trời xanh  
 Có tương phản cao giữa vùng trắng và xanh
@@ -297,18 +266,8 @@ Có nhiều màu (đỏ, cam, vàng, xanh lá, xanh dương...)
 → extract_color_contrast sẽ cho giá trị tương tự (vì cùng có tương phản) → extract_weighted_diversity sẽ cho giá trị cao hơn nhiều cho cảnh D (nhiều màu hơn)
 '''
 def extract_weighted_diversity(image):
-    '''
-    Đo số lượng màu khác nhau trong ảnh
-
-
-    Hue (H) đại diện cho màu sắc (0-180 trong OpenCV).
-    Saturation (S) đại diện cho độ bão hòa (0-255).
-    Value (V) đại diện cho độ sáng (0-255).
-    ---> Tách biệt thông tin về màu sắc (H) và độ sáng (V), giúp phân tích màu sắc chính xác hơn.
-    '''
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    '''Tách ảnh HSV thành 3 kênh riêng biệt'''
     h, s, v = cv2.split(hsv_image)
 
     '''Tính các giá trị màu sắc duy nhất trên từng kênh'''
@@ -316,22 +275,14 @@ def extract_weighted_diversity(image):
     s_unique = np.unique(s.flatten())
     v_unique = np.unique(v.flatten())
 
-    # Đếm số màu sắc thực sự khác biệt dựa trên tất cả các kênh
     h_weight = 2.0  # Hue quan trọng hơn trong cảm nhận màu sắc
     s_weight = 1.0
     v_weight = 0.5  # Value ít quan trọng nhất
 
-    # Độ đa dạng màu sắc có trọng số
-    # Công thức này kết hợp độ đa dạng của từng kênh màu (H, S, V) thành một giá trị duy nhất, có tính đến mức độ quan trọng của từng kênh.
-    # [ \text{Weighted Average} = \frac{\sum_{i=1}^n (x_i \cdot w_i)}{\sum_{i=1}^n w_i} ]
-    # (x_i) là độ đa dạng của từng kênh (len(h_unique), len(s_unique), len(v_unique)).
-    # (w_i) là trọng số tương ứng (h_weight, s_weight, v_weight).
     weighted_diversity = (len(h_unique) * h_weight +
                           len(s_unique) * s_weight +
                           len(v_unique) * v_weight) / (h_weight + s_weight + v_weight)
 
-    # Return a normalized version (dividing by a reasonable max value)
-    # Most images won't exceed 256 unique values per channel
     max_possible = (180 * h_weight + 256 * s_weight + 256 * v_weight) / (h_weight + s_weight + v_weight)
     return weighted_diversity / max_possible
 
