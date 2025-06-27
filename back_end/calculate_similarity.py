@@ -3,6 +3,7 @@ import cv2
 from helper.db_connection import get_db_connection
 from preprocess.deep_learning_extraction import extract_features_vgg16
 from preprocess.texture_extraction import extract_texture_features
+from preprocess.texture_extraction import extract_glcm_features_from_manual
 from preprocess.color_extraction import improved_color_features
 from preprocess.eoh_extraction import my_canny_full_with_eoh
 
@@ -271,7 +272,8 @@ def search_similar_images_weighted(query_image_path, weights, metric="cosine", t
         query_features["color"] = improved_color_features(image)
 
     if weights["texture"] > 0:
-        query_features["texture"] = extract_texture_features(image)
+        # query_features["texture"] = extract_texture_features(image)
+        query_features["texture"] = extract_glcm_features_from_manual(image)
 
     if weights["edge"] > 0:
         _, query_features["edge"] = my_canny_full_with_eoh(gray, min_val=100, max_val=150, eoh_bins=8)

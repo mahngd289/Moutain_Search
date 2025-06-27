@@ -4,6 +4,7 @@ import cv2
 
 from preprocess.deep_learning_extraction import extract_features_vgg16
 from preprocess.texture_extraction import extract_texture_features
+from preprocess.texture_extraction import extract_glcm_features_from_manual
 from preprocess.color_extraction import improved_color_features
 from preprocess.eoh_extraction import my_canny_full_with_eoh
 
@@ -150,7 +151,7 @@ def extract_and_save_features(conn, image_id, image_path):
 
         # Trích xuất các đặc trưng
         color_feats = improved_color_features(image)  # Đặc trưng màu
-        texture_feats = extract_texture_features(image)  # Đặc trưng kết cấu
+        texture_feats = extract_glcm_features_from_manual(image)  # Đặc trưng kết cấu
         _, edge_feats = my_canny_full_with_eoh(gray, min_val=100, max_val=150, eoh_bins=8)  # Đặc trưng cạnh (EOH)
         vgg_feats = extract_features_vgg16(image_path)  # Đặc trưng deep learning
 
