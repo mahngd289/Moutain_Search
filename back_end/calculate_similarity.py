@@ -6,7 +6,7 @@ from preprocess.texture_extraction import extract_texture_features
 from preprocess.texture_extraction import extract_glcm_features_from_manual
 from preprocess.color_extraction import improved_color_features
 from preprocess.eoh_extraction import my_canny_full_with_eoh
-from Moutain_Search.preprocess.texture_custom import *
+from preprocess.texture_custom import *
 
 def parse_vector(vec):
     """Convert any vector format to proper numpy array"""
