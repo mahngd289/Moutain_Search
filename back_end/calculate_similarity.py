@@ -6,7 +6,7 @@ from preprocess.texture_extraction import extract_texture_features
 from preprocess.texture_extraction import extract_glcm_features_from_manual
 from preprocess.color_extraction import improved_color_features
 from preprocess.eoh_extraction import my_canny_full_with_eoh
-
+from Moutain_Search.preprocess.texture_custom import *
 
 def parse_vector(vec):
     """Convert any vector format to proper numpy array"""
@@ -273,8 +273,9 @@ def search_similar_images_weighted(query_image_path, weights, metric="cosine", t
 
     if weights["texture"] > 0:
         # query_features["texture"] = extract_texture_features(image)
-        query_features["texture"] = extract_glcm_features_from_manual(image)
-
+        # query_features["texture"] = extract_glcm_features_from_manual(image)
+        glcm_manual = compute_glcm_custom(image)
+        query_features["texture"] = features_extraction_mean(glcm_manual)
     if weights["edge"] > 0:
         _, query_features["edge"] = my_canny_full_with_eoh(gray, min_val=100, max_val=150, eoh_bins=8)
 
