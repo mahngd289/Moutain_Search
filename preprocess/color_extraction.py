@@ -3,10 +3,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 
-'''
-Xử lý tốt các ảnh núi đa dạng (mùa đông ít màu, mùa thu nhiều màu)
-Không phân cụm quá chi tiết cho ảnh đơn giản hoặc quá thô cho ảnh phức tạp
-'''
+'''Mô hình cảnh quan núi: Hầu hết ảnh núi có khoảng 5 thành phần màu chính:  
+        Bầu trời (xanh/xám/trắng)
+        Đỉnh núi (nâu/xám/tuyết)
+        Thực vật (xanh lá/vàng)
+        Mặt nước (nếu có) hoặc đất đá
+        Bóng râm/vùng tối'''
 def elbow_optimal_k(image, max_k=5):
 
     '''LAB được thiết kế để gần với cách con người nhận thức màu sắc
@@ -83,12 +85,6 @@ def extract_dominant_colors(image, k=None):
     # Sắp xếp các cụm theo số lượng pixel giảm dần - Màu với tỷ lệ cao luôn được giữ lại, màu ít hơn có thể bị loại
     sorted_indices = np.argsort(counts)[::-1]
 
-    '''Mô hình cảnh quan núi: Hầu hết ảnh núi có khoảng 5 thành phần màu chính:  
-        Bầu trời (xanh/xám/trắng)
-        Đỉnh núi (nâu/xám/tuyết)
-        Thực vật (xanh lá/vàng)
-        Mặt nước (nếu có) hoặc đất đá
-        Bóng râm/vùng tối'''
     result = []
 
     # Tìm màu chủ đạo của mỗi cụm
@@ -103,10 +99,7 @@ def extract_dominant_colors(image, k=None):
         # 1 giá trị tỷ lệ (% diện tích của màu đó trong ảnh)
         result.append(counts[i] / len(labels))
 
-    '''Nắm bắt đặc tính riêng: Mỗi ảnh núi được mô tả bằng số màu tối ưu với đặc điểm riêng
-    Ưu tiên màu quan trọng: Các màu chiếm tỷ lệ nhỏ không làm nhiễu kết quả
-    Tăng độ chính xác: Ảnh đơn giản (mùa đông) được biểu diễn với ít cụm màu, ảnh phức tạp (mùa thu) có nhiều cụm hơn
-    Hai ảnh núi với K khác nhau vẫn có thể so sánh trực tiếp thông qua vector 20 chiều này, vì màu chủ đạo quan trọng nhất luôn được giữ lại và sắp xếp theo thứ tự giảm dần về tỷ lệ xuất hiện.'''
+
     # Đảm bảo chiều cố định bằng cách padding nếu cần
     while len(result) < 20:  # Đảm bảo 5 màu * 4 giá trị
         result.extend([0, 0, 0, 0])
@@ -144,7 +137,6 @@ def extract_color_regions(image, regions=5, visualize=False):
         '''
         '''
         Nắm bắt được mối tương quan giữa màu sắc và độ bão hòa
-        Phân biệt được, ví dụ, màu xanh nhạt (xanh ít bão hòa) với màu xanh đậm (xanh nhiều bão hòa)
         Cung cấp thông tin chi tiết hơn về phân phối màu sắc, quan trọng khi phân tích ảnh phong cảnh
         '''
         hist = cv2.calcHist([region], [0, 1], None, [8, 8], [0, 180, 0, 256])
@@ -198,35 +190,29 @@ def extract_seasonal_features(image):
     summer_mask = ((h >= 60) & (h <= 120) & (s >= 50))
 
     '''
-    Thành phần Hue (h):  
-    (h <= 30) | (h >= 330): Mặt nạ này chọn dải màu đỏ-cam-vàng, đặc trưng của lá mùa thu
+    Thành phần Hue (h):
+    (h <= 30) | (h >= 330): Dải màu đỏ-cam-vàng, đặc trưng của lá mùa thu
     Trong OpenCV (thang 0-180): ≤ 30 bao gồm đỏ, cam và vàng; ≥ 330 không tồn tại vì Hue chỉ từ 0-180, đây có thể là lỗi logic
-    Thành phần Saturation (s):  
-    (s >= 100): Yêu cầu độ bão hòa cao, đảm bảo chỉ chọn các màu sống động, rực rỡ đặc trưng của lá mùa thu
-    Loại bỏ các màu xám, nâu nhạt không đặc trưng cho mùa thu
+    Thành phần Saturation (s): Bão hòa cao, đảm bảo chỉ chọn các màu sống động, rực rỡ đặc trưng của lá mùa thu
     Ý nghĩa: Xác định tỷ lệ các điểm ảnh có màu đỏ/cam/vàng sống động, đặc trưng cho cảnh núi vào mùa thu khi lá cây chuyển màu
     '''
-    autumn_mask = ((h <= 30) | (h >= 330)) & (s >= 100)
+    # autumn_mask = ((h <= 30) | (h >= 330)) & (s >= 100)
+    autumn_mask = (h <= 30) & (s >= 100)
 
     '''
-    Điều kiện 1 - Các màu trắng/xám nhạt:  
-    (s <= 50) & (v >= 150): Chọn các pixel có độ bão hòa thấp (gần với màu xám/trắng) và độ sáng cao
+    
+    (s <= 50) & (v >= 150): Các màu trắng/xám nhạt, chọn các pixel có độ bão hòa thấp (gần với màu xám/trắng) và độ sáng cao
     Đại diện cho tuyết, mây, sương giá đặc trưng trong ảnh núi mùa đông
-    Điều kiện 2 - Các màu lạnh:  
-    (h >= 120) & (h <= 180): Bao gồm dải màu từ xanh lục-xanh dương đến tím nhạt
+    (h >= 120) & (h <= 180): Các màu lạnh gồm dải màu từ xanh lục-xanh dương đến tím nhạt
     Đại diện cho bóng tối lạnh và bầu trời mùa đông
-    Ý nghĩa: Xác định tỷ lệ các điểm ảnh có màu đặc trưng của mùa đông - hoặc là màu sáng không màu (tuyết) hoặc các màu lạnh (xanh dương)
     '''
     winter_mask = ((s <= 50) & (v >= 150)) | ((h >= 120) & (h <= 180))
 
     '''
     Thành phần Hue (h):  
-    (h >= 60) & (h <= 100): Chọn dải màu từ xanh vàng đến xanh lá cây non
-    Đặc trưng cho màu lá non mùa xuân, khác với xanh đậm của mùa hè
-    Thành phần Saturation (s) và Value (v):  
+    (h >= 60) & (h <= 100): xanh vàng đến xanh lá cây non, lá non mùa xuân, khác với xanh đậm của mùa hè
     (s >= 100): Yêu cầu độ bão hòa cao, đảm bảo màu tươi sáng
     (v >= 100): Yêu cầu độ sáng vừa phải trở lên, loại bỏ các màu xanh tối
-    Ý nghĩa: Xác định tỷ lệ các điểm ảnh có màu xanh lá non, tươi và sáng - đặc trưng của thảm thực vật mới mọc trong mùa xuân
     '''
     spring_mask = ((h >= 60) & (h <= 100) & (s >= 100) & (v >= 100))
 
@@ -255,16 +241,7 @@ def extract_color_contrast(image):
 
     return np.array([h_mean, h_std, h_contrast, s_mean, s_std, s_contrast, v_mean, v_std, v_contrast])
 
-'''
-Hai cảnh núi có thể có độ tương phản tương tự nhưng một cảnh đa dạng hơn về màu sắc
-Cảnh núi C: Núi tuyết trắng dưới bầu trời xanh  
-Có tương phản cao giữa vùng trắng và xanh
-Chỉ có 2-3 màu chính
-Cảnh núi D: Núi mùa thu với nhiều sắc lá  
-Cũng có tương phản giữa các vùng màu
-Có nhiều màu (đỏ, cam, vàng, xanh lá, xanh dương...)
-→ extract_color_contrast sẽ cho giá trị tương tự (vì cùng có tương phản) → extract_weighted_diversity sẽ cho giá trị cao hơn nhiều cho cảnh D (nhiều màu hơn)
-'''
+
 def extract_weighted_diversity(image):
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
