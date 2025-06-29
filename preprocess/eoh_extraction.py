@@ -101,17 +101,17 @@ def my_canny_full_with_eoh(img, min_val, max_val, sobel_size=3, is_L2_gradient=F
     return scale_to_0_255(canny_mask), hist_normalized
 
 
-# gray = cv2.imread('E:\OnSchool\Moutain_Search\images\gsun_01a0b4a162e02e6d3913b3a620540297.jpg', cv2.IMREAD_GRAYSCALE)
-# gray = cv2.resize(gray, (256, 256))
-# # Gọi hàm Canny + EOH
-# canny_img, eoh_feature = my_canny_full_with_eoh(gray, min_val=100, max_val=150)
-# canny_result, eoh_feature_noCustom = extract_eoh_from_canny(gray, low_thresh=100, high_thresh=150)
-# # Hiển thị ảnh Canny
-# cv2.imshow("Canny", canny_img)
-# cv2.imshow("OpenCV Canny", canny_result)
-# cv2.waitKey(0)
-# cv2.destroyAllWindows()
-#
-# # In vector đặc trưng EOH
-# print("EOH descriptor:", eoh_feature)
-# print("EOH descriptor:", eoh_feature_noCustom)
+gray = cv2.imread('E:\OnSchool\Moutain_Search\images\gsun_01a0b4a162e02e6d3913b3a620540297.jpg', cv2.IMREAD_GRAYSCALE)
+gray = cv2.resize(gray, (256, 256))
+# Gọi hàm Canny + EOH
+canny_img, eoh_feature = my_canny_full_with_eoh(gray, min_val=100, max_val=150)
+canny_result, eoh_feature_noCustom = extract_eoh_from_canny(gray, low_thresh=100, high_thresh=150)
+# Hiển thị ảnh Canny
+cv2.imshow("Canny", canny_img)
+cv2.imshow("OpenCV Canny", canny_result)
+cv2.waitKey(0)
+cv2.destroyAllWindows()
+
+# In vector đặc trưng EOH
+print("EOH descriptor:", eoh_feature)
+print("EOH descriptor:", eoh_feature_noCustom)
